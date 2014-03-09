@@ -154,7 +154,7 @@ configured_services.each do |page_config_file|
       store(combined_name, content, filename)
     rescue StandardError => e
       puts e.inspect
-      puts e.backtrace
+      # puts e.backtrace # use for debugging purposes
     end
     # store(combined_name, body, filename + '.html') # for debugging
   end
