@@ -148,9 +148,14 @@ configured_services.each do |page_config_file|
     filename = File.join(CONFIG['history'], "#{combined_name}.md")
 
     # actual work
-    body = retrieve_request_body(uri)
-    content = extract_text(body, value['selector'])
-    store(combined_name, content, filename)
+    begin
+      body = retrieve_request_body(uri)
+      content = extract_text(body, value['selector'])
+      store(combined_name, content, filename)
+    rescue StandardError => e
+      puts e.inspect
+      puts e.backtrace
+    end
     # store(combined_name, body, filename + '.html') # for debugging
   end
 end
