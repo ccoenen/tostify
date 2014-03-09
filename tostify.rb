@@ -78,7 +78,7 @@ def retrieve_request_body uri, redirect_limit = 5
 
     retrieve_request_body(URI(location), redirect_limit-1)
   else
-    puts "WARNING: Response code was #{response.code}".red
+    puts "  WARNING: Response code was #{response.code}".red
     ""
   end
 end
@@ -104,7 +104,7 @@ def extract_text body, selector
 
   content = document.search(selector).inner_text.strip
   if content.length < 100 # 100 characters is an abritrary value. Basically "small"
-    puts "WARNING: Very Short Content (#{content.length} Bytes)".red
+    puts "  WARNING: Very Short Content (#{content.length} Bytes)".red
   end
   content
 end
@@ -118,9 +118,9 @@ def store name, what, where
   end
   if `git status --porcelain "#{where}"`.strip.length > 0
     @changed_services << name
-    puts "#{name} CHANGED"
+    puts "  #{name} CHANGED"
   else
-    puts "#{name} OK"
+    puts "  #{name} OK"
   end
 end
 
@@ -130,7 +130,7 @@ def check_into_git
   if @changed_services.length > 0
     `git add #{CONFIG['history']}`
     `git commit -m "history changed for #{@changed_services.join(', ')}"`
-    puts "=== changes ==="
+    puts "\n\n\n=== changes ==="
     puts `git diff HEAD@{1}..HEAD`
   end
 end
@@ -142,12 +142,19 @@ end
 
 # go over the services and fetch their configured pages
 configured_services.each do |page_config_file|
+  puts "\n==> #{page_config_file} <==" if $DEBUG
   page = JSON.load(File.open(page_config_file, 'r'))
-  next unless page.has_key?('tosback2')
+  unless page.has_key?('tosback2')
+    puts "  WARNING: No 'tosback2' key found in #{page_config_file}".red if $DEBUG
+    next
+  end
 
   page['tosback2'].each_pair do |key, value|
     next if value.class == String
-    next unless value.has_key?('url')
+    unless value.has_key?('url')
+      puts "  WARNING: No 'url' key found in #{page_config_file} / tosback2 / #{key}".red if $DEBUG
+      next
+    end
 
     # preparinv variables
     uri = URI(value['url'])
@@ -161,10 +168,10 @@ configured_services.each do |page_config_file|
       content = extract_text(body, value['selector'])
       store(combined_name, content, filename)
     rescue StandardError => e
-      puts e.inspect
-      # puts e.backtrace # use for debugging purposes
+      puts "  ERROR: #{e.inspect}".red
+      puts e.backtrace if $DEBUG
     end
-    # store(combined_name, body, filename + '.html') # for debugging
+    store(combined_name, body, filename + '.html') if $DEBUG
   end
 end
 
