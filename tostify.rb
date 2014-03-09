@@ -30,8 +30,8 @@ require 'fileutils'
 require 'hpricot'
 require 'chromatic'
 
+Dir.chdir(File.dirname(__FILE__))
 CONFIG = JSON.load(File.open('config.json', 'r'))
-HISTORY_DIR = File.join(File.dirname(__FILE__), CONFIG['history'])
 changed_pages = []
 
 CONFIG['pages'].each do |page|
@@ -45,7 +45,7 @@ CONFIG['pages'].each do |page|
   http = Net::HTTP.new(uri.host, uri.port)
   if uri.scheme == 'https'
     http.use_ssl = true
-    http.ca_file = File.join(File.dirname(__FILE__), "cacert.pem")
+    http.ca_file = "cacert.pem"
   end
 
   response = http.get(uri.path)
@@ -59,7 +59,7 @@ CONFIG['pages'].each do |page|
 
 
 
-  persistent_name = File.join(HISTORY_DIR, page['persistent_name'])
+  persistent_name = File.join(CONFIG['history'], page['persistent_name'])
   FileUtils.mkdir_p(File.dirname(persistent_name))
   File.open(persistent_name, 'wb') do |f|
     f << body
@@ -73,7 +73,7 @@ CONFIG['pages'].each do |page|
 end
 
 if changed_pages.length > 0
-  `git add #{HISTORY_DIR}`
+  `git add #{CONFIG['history']}`
   `git commit -m "history changed for #{changed_pages.join(', ')}"`
   puts "=== changes ==="
   puts `git diff HEAD@{1}..HEAD`
