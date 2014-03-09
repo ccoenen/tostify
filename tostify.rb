@@ -9,20 +9,31 @@ require 'chromatic'
 
 CONFIG = JSON.load(File.open('config.json', 'r'))
 HISTORY_DIR = File.join(File.dirname(__FILE__), CONFIG['history'])
+changed_pages = []
 
 CONFIG['pages'].each do |page|
   uri = URI(page['url'])
+  # defaults for each page
   page['name'] ||= uri.host
-  puts "#{page['name'].red}: #{uri}"
+  page['persistent_name'] ||= 'index.html'
+
+  puts "#{page['name'].yellow}: #{uri}"
   response = open(uri)
 
-  FileUtils.mkdir_p(File.join(HISTORY_DIR, page['name']))
-  File.open(File.join(HISTORY_DIR, page['name'], 'index.html'), 'wb') do |f|
+  persistent_name = File.join(HISTORY_DIR, page['name'], page['persistent_name'])
+  FileUtils.mkdir_p(File.dirname(persistent_name))
+  File.open(persistent_name, 'wb') do |f|
     f << response.read
+  end
+  if (`git status --porcelain #{persistent_name}`.strip.length > 0)
+    changed_pages << page['name']
+	puts "  changed".red
+  else
+    puts "  unchanged".green
   end
 end
 
 puts `git status #{HISTORY_DIR}`
 puts `git add #{HISTORY_DIR}`
-puts `git commit -m "automatic history commit for #{Time.now}"`
+puts `git commit -m "history changed for #{changed_pages.join(', ')}"`
 
