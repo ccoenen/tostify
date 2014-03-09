@@ -33,7 +33,5 @@ CONFIG['pages'].each do |page|
   end
 end
 
-puts `git status #{HISTORY_DIR}`
-puts `git add #{HISTORY_DIR}`
-puts `git commit -m "history changed for #{changed_pages.join(', ')}"`
-
+`git add #{HISTORY_DIR}`
+`git commit -m "history changed for #{changed_pages.join(', ')}"`
