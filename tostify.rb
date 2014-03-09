@@ -45,10 +45,7 @@ configured_services = Dir[File.join(CONFIG['services'], '*.json')]
 
 # retrieves the utf-8 encoded request body for uri
 def retrieve_request_body uri, redirect_limit = 5
-  if redirect_limit < 1
-    puts "WARNING: Too many redirects".red
-    return ""
-  end
+  raise "Too many redirects" if redirect_limit < 1
 
   http = Net::HTTP.new(uri.host, uri.port)
   if uri.scheme == 'https'
@@ -78,8 +75,7 @@ def retrieve_request_body uri, redirect_limit = 5
 
     retrieve_request_body(URI(location), redirect_limit-1)
   else
-    puts "  WARNING: Response code was #{response.code}".red
-    ""
+    raise "Response code was #{response.code}"
   end
 end
 
@@ -104,7 +100,7 @@ def extract_text body, selector
 
   content = document.search(selector).inner_text.strip
   if content.length < 100 # 100 characters is an abritrary value. Basically "small"
-    puts "  WARNING: Very Short Content (#{content.length} Bytes)".red
+    raise "Very Short Content (#{content.length} Bytes)"
   end
   content
 end
@@ -168,7 +164,8 @@ configured_services.each do |page_config_file|
       content = extract_text(body, value['selector'])
       store(combined_name, content, filename)
     rescue StandardError => e
-      puts "  ERROR: #{e.inspect}".red
+      puts "  ERROR while processing #{page_config_file}".red
+      puts "  #{e.inspect}".red
       puts e.backtrace if $DEBUG
     end
     store(combined_name, body, filename + '.html') if $DEBUG
