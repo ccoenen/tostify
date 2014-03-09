@@ -51,7 +51,7 @@ CONFIG['pages'].each do |page|
   File.open(persistent_name, 'wb') do |f|
     f << response.body
   end
-  if (`git status --porcelain #{persistent_name}`.strip.length > 0)
+  if `git status --porcelain #{persistent_name}`.strip.length > 0
     changed_pages << page['name']
     puts "  changed".red
   else
@@ -59,5 +59,9 @@ CONFIG['pages'].each do |page|
   end
 end
 
-`git add #{HISTORY_DIR}`
-`git commit -m "history changed for #{changed_pages.join(', ')}"`
+if changed_pages.length > 0
+  `git add #{HISTORY_DIR}`
+  `git commit -m "history changed for #{changed_pages.join(', ')}"`
+  puts "=== changes ==="
+  puts `git diff HEAD@{1}..HEAD`
+end
