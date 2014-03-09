@@ -1,14 +1,4 @@
 {
 	"history": "./history",
-	"pages": [
-		{
-			"name": "google.de",
-			"url": "http://www.google.de/intl/de/policies/terms/regional.html",
-			"selector": "div.maia-article"
-		},
-		{
-			"url": "https://twitter.com/tos",
-			"selector": "#pageContent"
-		}
-	]
+	"services": "./services"
 }

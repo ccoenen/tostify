@@ -13,26 +13,38 @@ After cloning this project, you should create a branch of your own like this:
 
     git checkout -b mytos
 
-Add a simple line of config to the *pages* section of `config.json`. You can watch as many pages, as you like. This will look like this:
+Toss one json-file into the services directory, specifying the sites and their respective urls. We're using [ToS;DR's specification](https://github.com/tosdr/tosdr.org/wiki/Specification:-services), which means, you can easily choose from ToS;DR's very large [list of defined services](https://github.com/tosdr/tosdr.org/tree/master/services) - or just write your own.
+
+For this script, we really only take the id and any url we can find. The minimum specification therefore becomes this:
 
     {
-        "url": "https://www.google.de/intl/de/policies/terms/regional.html"
+      "id": "facebook",
+      "name": "Facebook",
+      "tosback2": {
+        "privacy": {
+          "name": "Data Use Policy",
+          "url": "http://www.facebook.com/full_data_use_policy"
+        },
+        /* maybe other urls besides that (yes, i know, comment isn't valid json) */
+      }
     }
 
-Afterwards, the script will download that page to a directory called `www.google.de` below `history`. The directory name can be configured like in this example, where the downloaded file will end up in a directory called `Google`.
+In addition to that spec, we're also adding a CSS-Selector, which tells us where exactly the text can be found. Adding that, the above example looks like this:
 
     {
-        "name": "Google",
-        "url": "https://www.google.de/intl/de/policies/terms/regional.html"
+      "id": "facebook",
+      "name": "Facebook",
+      "tosback2": {
+        "privacy": {
+          "name": "Data Use Policy",
+          "url": "http://www.facebook.com/full_data_use_policy",
+          "selector": "div.maia-article"
+        }
+      }
     }
 
-You also probably want to specify, where on the HTML page the TOS-text is. This can be done with the `selector` configuration. Your final configuration will look like this:
+If you're using the selector, we'll only convert that part of the page to text and put it in your git repository.
 
-    {
-        "name": "Google",
-        "url": "https://www.google.de/intl/de/policies/terms/regional.html",
-        "selector": "div.maia-article"
-    }
 
 Put this into your crontab to check all your configured sites every night:
 
