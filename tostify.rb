@@ -48,13 +48,21 @@ CONFIG['pages'].each do |page|
     http.ca_file = File.join(File.dirname(__FILE__), "cacert.pem")
   end
 
-  response = http.get(uri.path).body
-  response = Hpricot(response).search(page['selector']).inner_text.strip
+  response = http.get(uri.path)
+  if response["Content-Type"] =~ /charset=(.*)$/
+    response.body.force_encoding($1)
+  else
+    response.body.force_encoding('UTF-8')
+  end
+  body = response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
+  body = Hpricot(body).search(page['selector']).inner_text.strip
+
+
 
   persistent_name = File.join(HISTORY_DIR, page['persistent_name'])
   FileUtils.mkdir_p(File.dirname(persistent_name))
   File.open(persistent_name, 'wb') do |f|
-    f << response
+    f << body
   end
   if `git status --porcelain #{persistent_name}`.strip.length > 0
     changed_pages << page['name']
