@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # The MIT License (MIT)
 # Copyright (c) 2014 Claudius Coenen
 #
