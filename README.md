@@ -34,4 +34,4 @@ Developed for Ruby 1.9+ and pretty much any version of git. Git must be on your 
 Note to windows users
 ---------------------
 
-On Windows, you can use "Scheduled Tasks" instead of crontab to automate downloads.
+On Windows, you can use "Scheduled Tasks" instead of crontab to automate downloads. To install hpricot (used in this project), you'll need the [RubyDevKit](http://rubyinstaller.org/downloads/)

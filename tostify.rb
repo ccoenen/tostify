@@ -27,6 +27,7 @@ require 'json'
 require 'uri'
 require 'net/http'
 require 'fileutils'
+require 'hpricot'
 require 'chromatic'
 
 CONFIG = JSON.load(File.open('config.json', 'r'))
@@ -37,7 +38,8 @@ CONFIG['pages'].each do |page|
   uri = URI(page['url'])
   # defaults for each page
   page['name'] ||= uri.host
-  page['persistent_name'] ||= 'index.html'
+  page['persistent_name'] ||= page['name'] + '.txt'
+  page['selector'] ||= "body"
 
   puts "#{page['name'].yellow}: #{uri}"
   http = Net::HTTP.new(uri.host, uri.port)
@@ -45,12 +47,14 @@ CONFIG['pages'].each do |page|
     http.use_ssl = true
     http.ca_file = File.join(File.dirname(__FILE__), "cacert.pem")
   end
-  response = http.get(uri.path)
 
-  persistent_name = File.join(HISTORY_DIR, page['name'], page['persistent_name'])
+  response = http.get(uri.path).body
+  response = Hpricot(response).search(page['selector']).inner_text.strip
+
+  persistent_name = File.join(HISTORY_DIR, page['persistent_name'])
   FileUtils.mkdir_p(File.dirname(persistent_name))
   File.open(persistent_name, 'wb') do |f|
-    f << response.body
+    f << response
   end
   if `git status --porcelain #{persistent_name}`.strip.length > 0
     changed_pages << page['name']
