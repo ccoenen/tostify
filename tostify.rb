@@ -63,7 +63,7 @@ def retrieve_request_body uri, redirect_limit = 5
 
   if response.code == "200"
     response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
-  elsif response.code == "301"
+  elsif response.code == "301" || response.code == "302"
     # follow redirect
     location = response['Location']
     if location =~ /\A\//
