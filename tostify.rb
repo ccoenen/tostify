@@ -44,7 +44,12 @@ configured_services = Dir[File.join(CONFIG['services'], '*.json')]
 
 
 # retrieves the utf-8 encoded request body for uri
-def retrieve_request_body uri
+def retrieve_request_body uri, redirect_limit = 5
+  if redirect_limit < 1
+    puts "WARNING: Too many redirects".red
+    return ""
+  end
+
   http = Net::HTTP.new(uri.host, uri.port)
   if uri.scheme == 'https'
     http.use_ssl = true
@@ -58,11 +63,16 @@ def retrieve_request_body uri
     response.body.force_encoding('UTF-8')
   end
   puts "#{uri} (HTTP #{response.code}, #{response.body.length} Bytes)".yellow
-  unless response.code == "200"
-    puts "WARNING: Response code was #{response.code}".red
-  end
 
-  response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
+  if response.code == "200"
+    response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
+  elsif response.code == "301"
+    # follow redirect
+    retrieve_request_body(URI(response['Location']), redirect_limit-1)
+  else
+    puts "WARNING: Response code was #{response.code}".red
+    ""
+  end
 end
 
 
