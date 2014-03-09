@@ -3,7 +3,7 @@ Encoding.default_external = Encoding::UTF_8 if RUBY_VERSION > '1.8.7'
 
 require 'json'
 require 'uri'
-require 'open-uri'
+require 'net/http'
 require 'fileutils'
 require 'chromatic'
 
@@ -18,16 +18,21 @@ CONFIG['pages'].each do |page|
   page['persistent_name'] ||= 'index.html'
 
   puts "#{page['name'].yellow}: #{uri}"
-  response = open(uri)
+  http = Net::HTTP.new(uri.host, uri.port)
+  if uri.scheme == 'https'
+    http.use_ssl = true
+    http.ca_file = File.join(File.dirname(__FILE__), "cacert.pem")
+  end
+  response = http.get(uri.path)
 
   persistent_name = File.join(HISTORY_DIR, page['name'], page['persistent_name'])
   FileUtils.mkdir_p(File.dirname(persistent_name))
   File.open(persistent_name, 'wb') do |f|
-    f << response.read
+    f << response.body
   end
   if (`git status --porcelain #{persistent_name}`.strip.length > 0)
     changed_pages << page['name']
-	puts "  changed".red
+    puts "  changed".red
   else
     puts "  unchanged".green
   end
