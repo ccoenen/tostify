@@ -64,7 +64,7 @@ CONFIG['pages'].each do |page|
   File.open(persistent_name, 'wb') do |f|
     f << body
   end
-  if `git status --porcelain #{persistent_name}`.strip.length > 0
+  if `git status --porcelain "#{persistent_name}"`.strip.length > 0
     changed_pages << page['name']
     puts "  changed".red
   else
