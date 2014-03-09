@@ -1,24 +1,23 @@
+# encoding: UTF-8
+Encoding.default_external = Encoding::UTF_8 if RUBY_VERSION > '1.8.7'
+
+require 'json'
 require 'uri'
 require 'open-uri'
 require 'fileutils'
 require 'chromatic'
 
-HISTORY_DIR = File.join(File.dirname(__FILE__), 'history')
+CONFIG = JSON.load(File.open('config.json', 'r'))
+HISTORY_DIR = File.join(File.dirname(__FILE__), CONFIG['history'])
 
-CONFIG = [
-  {
-    "url" => "http://www.google.de/intl/de/policies/terms/regional.html"
-  }
-]
-
-CONFIG.each do |config|
-  uri = URI(config['url'])
-  config['name'] ||= uri.host
-  puts "#{config['name'].red}: #{uri}"
+CONFIG['pages'].each do |page|
+  uri = URI(page['url'])
+  page['name'] ||= uri.host
+  puts "#{page['name'].red}: #{uri}"
   response = open(uri)
 
-  FileUtils.mkdir_p(File.join(HISTORY_DIR, config['name']))
-  File.open(File.join(HISTORY_DIR, config['name'], 'index.html'), 'wb') do |f|
+  FileUtils.mkdir_p(File.join(HISTORY_DIR, page['name']))
+  File.open(File.join(HISTORY_DIR, page['name'], 'index.html'), 'wb') do |f|
     f << response.read
   end
 end
