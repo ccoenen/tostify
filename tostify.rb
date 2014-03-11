@@ -34,7 +34,6 @@ Dir.chdir(File.dirname(__FILE__))
 CONFIG = JSON.load(File.open('config.json', 'r'))
 
 # get all the config files for the various services
-configured_services = Dir[File.join(CONFIG['services'], '*.json')]
 @changed_services = []
 
 
@@ -121,6 +120,25 @@ def store name, what, where
 end
 
 
+
+def download(url, selector, name)
+  uri = URI(url)
+  filename = File.join(CONFIG['history'], "#{name}.md")
+
+  # actual work
+  begin
+    body = retrieve_request_body(uri)
+    content = extract_text(body, selector)
+    store(name, content, filename)
+    store(name, body, filename + '.html') if $DEBUG
+  rescue StandardError => e
+    puts "  ERROR while processing #{name}".red
+    puts "  #{e.inspect}".red
+    raise e
+  end
+end
+
+
 # if anything has been changed, we want to store the current state of history.
 def check_into_git
   if @changed_services.length > 0
@@ -136,8 +154,9 @@ end
 # Actual Program starts here
 #
 
-# go over the services and fetch their configured pages
-configured_services.each do |page_config_file|
+# go over the tosback2-style configuration files and fetch their configured pages
+tosback_services = Dir[File.join(CONFIG['services'], '*.json')]
+tosback_services.each do |page_config_file|
   puts "\n==> #{page_config_file} <==" if $DEBUG
   page = JSON.load(File.open(page_config_file, 'r'))
   unless page.has_key?('tosback2')
@@ -152,23 +171,11 @@ configured_services.each do |page_config_file|
       next
     end
 
-    # preparinv variables
-    uri = URI(value['url'])
+    # preparing variables
     value['selector'] ||= "body"
     combined_name = "#{page['name']} - #{value['name']}"
-    filename = File.join(CONFIG['history'], "#{combined_name}.md")
 
-    # actual work
-    begin
-      body = retrieve_request_body(uri)
-      content = extract_text(body, value['selector'])
-      store(combined_name, content, filename)
-    rescue StandardError => e
-      puts "  ERROR while processing #{page_config_file}".red
-      puts "  #{e.inspect}".red
-      puts e.backtrace if $DEBUG
-    end
-    store(combined_name, body, filename + '.html') if $DEBUG
+    download(value['url'], value['selector'], combined_name)
   end
 end
 
