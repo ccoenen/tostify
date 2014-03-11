@@ -42,9 +42,10 @@ CONFIG = JSON.load(File.open('config.json', 'r'))
 #
 
 
-# retrieves the utf-8 encoded request body for uri
-def retrieve_request_body uri, redirect_limit = 5
+# retrieves the utf-8 encoded request body for url
+def retrieve_request_body url, redirect_limit = 5
   raise "Too many redirects" if redirect_limit < 1
+  uri = URI(url)
 
   http = Net::HTTP.new(uri.host, uri.port)
   if uri.scheme == 'https'
@@ -66,10 +67,9 @@ def retrieve_request_body uri, redirect_limit = 5
     # follow redirect
     location = response['Location']
     if location =~ /\A\//
-      # invalid relative redirect. We're using our last uri to fix this.
+      puts "  Fixing invalid relative redirect to #{location}, received from #{uri}" if $DEBUG
       uri.path = location
       location = uri.to_s
-      puts "  FIXED Redirect to #{location}" if $DEBUG
     end
 
     retrieve_request_body(URI(location), redirect_limit-1)
@@ -122,12 +122,11 @@ end
 
 
 def download(url, selector, name)
-  uri = URI(url)
   filename = File.join(CONFIG['history'], "#{name}.md")
 
   # actual work
   begin
-    body = retrieve_request_body(uri)
+    body = retrieve_request_body(url)
     content = extract_text(body, selector)
     store(name, content, filename)
     store(name, body, filename + '.html') if $DEBUG
