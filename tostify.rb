@@ -54,14 +54,14 @@ def retrieve_request_body uri, redirect_limit = 5
   end
 
   response = http.get(uri.path)
-  if response["Content-Type"] =~ /charset=(.*)$/
-    response.body.force_encoding($1)
-  else
-    response.body.force_encoding('UTF-8')
-  end
   puts "#{uri} (HTTP #{response.code}, #{response.body.length} Bytes)".yellow
 
   if response.code == "200"
+    if response["Content-Type"] =~ /charset=(.*)$/
+      response.body.force_encoding($1)
+    else
+      response.body.force_encoding('UTF-8')
+    end
     response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
   elsif response.code == "301" || response.code == "302"
     # follow redirect
