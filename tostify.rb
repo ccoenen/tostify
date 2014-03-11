@@ -33,7 +33,7 @@ require 'chromatic'
 Dir.chdir(File.dirname(__FILE__))
 CONFIG = JSON.load(File.open('config.json', 'r'))
 
-# get all the config files for the various services
+# helpers for nice output
 @changed_services = []
 
 
@@ -81,9 +81,22 @@ end
 
 # use hpricot to extract just the text we're looking for
 def extract_text body, selector
+  # spans will have no effect on the way things look, we'll just get rid of them
+  body.gsub!(/<\/?span[^>]*>/, '')
+
+  # there shall be only one white space between things.
+  body.gsub!(/\s+/o, ' ')
+
+  # block-level tag don't need surrounding white space
+  ['p', 'li', 'ul', 'ol', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'div'].each do |tagname|
+    body.gsub!(/\s*(<#{tagname}[^>]*>)\s*/i, "\\1")
+    body.gsub!(/\s*(<\/#{tagname}>)\s*/i, "\\1")
+  end
+
   document = Hpricot(body)
 
   # replace a lot of common elements, outputs something like markdown
+  document.search('script').remove();
   document.search('h1').prepend("\n\n# ").append(" #\n")
   document.search('h2').prepend("\n\n## ").append(" ##\n")
   document.search('h3').prepend("\n\n### ").append(" ###\n")
