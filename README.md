@@ -5,6 +5,11 @@ tostify
 
 Do you read the TOS of services you use? Do you with to keep track of their changes? This may be the script for you. This can also be used to keep track of pretty much any change on any webpage. We're using git + ruby to download the current state and compare it with the "last known" state.
 
+Current State
+-------------
+
+Right now, the script downloads the specified links to a markdown-like format on your hard disk. It is very much in an early stage and will likely change a lot during the next steps.
+
 
 Configuration
 -------------
