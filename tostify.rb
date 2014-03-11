@@ -187,7 +187,12 @@ tosback_services.each do |page_config_file|
     value['selector'] ||= "body"
     combined_name = "#{page['name']} - #{value['name']}"
 
-    download(value['url'], value['selector'], combined_name)
+    begin
+      download(value['url'], value['selector'], combined_name)
+    rescue StandardError => e
+      puts "  in #{page_config_file} / tosback2 / #{key}".red
+      puts e.backtrace if $DEBUG
+    end
   end
 end
 
