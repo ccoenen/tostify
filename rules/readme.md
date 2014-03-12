@@ -1,3 +1,5 @@
+# Tostify rules
+
 This directory takes tostify's own rule files as either json or txt.
 
 They generally have this form, and may contain these attributes:
@@ -11,10 +13,10 @@ They generally have this form, and may contain these attributes:
 
 * `name` is optional and will default to the name of the config file.
 * `url` is required and should be a full url including http(s)://
-* `selector` is optional and takes a css-selector from which we'll take the content
+* `css` is optional and takes a css-selector from which we'll take the content
 * `xpath` is optional and takes an xpath from which we'll take the content
 
-Please note that selector takes precedence over xpath in case both are present.
+Please note that `css` takes precedence over `xpath` in case both are present.
 
 The minimum config is this:
 
