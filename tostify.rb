@@ -63,6 +63,11 @@ def retrieve_request_body url, redirect_limit = 5
     else
       response.body.force_encoding('UTF-8')
     end
+
+    if response.body.length < 100
+      raise "Response too short, double check the url"
+    end
+
     response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
   elsif response.code == "301" || response.code == "302"
     # follow redirect
@@ -120,7 +125,7 @@ def extract_text body, options = {}
   end
 
   if content.length < 100 # 100 characters is an abritrary value. Basically "small"
-    raise "Very Short Content (#{content.length} Bytes)"
+    raise "Very short content (#{content.length} bytes) after text-extraction. Double-check the selector \"#{options[:css] || options[:xpath]}\""
   end
   content
 end
