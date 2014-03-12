@@ -80,7 +80,7 @@ end
 
 
 # use hpricot to extract just the text we're looking for
-def extract_text body, selector
+def extract_text body, options = {}
   # spans will have no effect on the way things look, we'll just get rid of them
   body.gsub!(/<\/?span[^>]*>/, '')
 
@@ -110,7 +110,14 @@ def extract_text body, selector
   document.search('ul, ol').prepend("\n").append("\n")
   document.search('a').each {|a| a.swap("[#{a.inner_text}](#{a.attributes['href']})") }
 
-  content = document.search(selector).inner_text.strip
+  content = if options.has_key? :css
+    document.search(options[:css]).inner_text.strip
+  elsif options.has_key? :xpath
+    (document/options[:xpath]).inner_text.strip
+  else
+    body
+  end
+
   if content.length < 100 # 100 characters is an abritrary value. Basically "small"
     raise "Very Short Content (#{content.length} Bytes)"
   end
@@ -134,13 +141,13 @@ end
 
 
 
-def download(url, selector, name)
+def download(url, name, options = {})
   filename = File.join(CONFIG['history'], "#{name}.md")
 
   # actual work
   begin
     body = retrieve_request_body(url)
-    content = extract_text(body, selector)
+    content = extract_text(body, options)
     store(name, content, filename)
     store(name, body, filename + '.html') if $DEBUG
   rescue StandardError => e
@@ -166,8 +173,28 @@ end
 # Actual Program starts here
 #
 
-# go over the tosback2-style configuration files and fetch their configured pages
-tosback_services = Dir[File.join(CONFIG['services'], '*.json')]
+
+# go over tosback2-style "rules"
+tosback_rules = Dir[File.join(CONFIG['tosback2-rules'], '*.xml')]
+tosback_rules.each do |rule_file|
+  puts "\n==> #{rule_file} <==" if $DEBUG
+  doc = Hpricot.XML(IO.read(rule_file))
+  (doc/'docname').each do |docname|
+    combined_name = "#{doc.root[:name]} - #{docname[:name]}"
+    (docname/'url').each do |url_node|
+      begin
+        download(url_node[:name], combined_name, {:xpath => url_node[:xpath]})
+      rescue StandardError => e
+        puts "  in #{rule_file} / #{combined_name}".red
+        puts e.backtrace if $DEBUG
+      end
+    end
+  end
+end
+
+
+# go over the tosback2-style "services" files and fetch their configured pages
+tosback_services = Dir[File.join(CONFIG['tosback2-services'], '*.json')]
 tosback_services.each do |page_config_file|
   puts "\n==> #{page_config_file} <==" if $DEBUG
   page = JSON.load(File.open(page_config_file, 'r'))
@@ -188,7 +215,7 @@ tosback_services.each do |page_config_file|
     combined_name = "#{page['name']} - #{value['name']}"
 
     begin
-      download(value['url'], value['selector'], combined_name)
+      download(value['url'], combined_name, {:css => value['selector']})
     rescue StandardError => e
       puts "  in #{page_config_file} / tosback2 / #{key}".red
       puts e.backtrace if $DEBUG
