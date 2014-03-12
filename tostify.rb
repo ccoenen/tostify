@@ -96,6 +96,7 @@ def extract_text body, options = {}
   document = Hpricot(body)
 
   # replace a lot of common elements, outputs something like markdown
+  document.search('head').remove();
   document.search('script').remove();
   document.search('h1').prepend("\n\n# ").append(" #\n")
   document.search('h2').prepend("\n\n## ").append(" ##\n")
@@ -115,7 +116,7 @@ def extract_text body, options = {}
   elsif options.has_key? :xpath
     (document/options[:xpath]).inner_text.strip
   else
-    body
+    document.inner_text.strip
   end
 
   if content.length < 100 # 100 characters is an abritrary value. Basically "small"
