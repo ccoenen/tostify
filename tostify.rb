@@ -66,14 +66,13 @@ def retrieve_request_body url, redirect_limit = 5
     response.body.encode('UTF-8', {:invalid => :replace, :undef => :replace, :replace => '?'})
   elsif response.code == "301" || response.code == "302"
     # follow redirect
-    location = response['Location']
-    if location =~ /\A\//
+    location = URI.parse(response['Location'])
+    if location.relative?
       puts "  Fixing invalid relative redirect to #{location}, received from #{uri}" if $DEBUG
-      uri.path = location
-      location = uri.to_s
+      location = uri + location
     end
 
-    retrieve_request_body(URI(location), redirect_limit-1)
+    retrieve_request_body(location, redirect_limit-1)
   else
     raise "Response code was #{response.code}"
   end
