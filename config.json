@@ -1,5 +1,5 @@
 {
 	"history": "./history",
-	"tosback2-services": "./tosback2-services",
+	"tosdr-services": "./tosdr-services",
 	"tosback2-rules": "./tosback2-rules"
 }

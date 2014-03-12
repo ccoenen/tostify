@@ -193,9 +193,9 @@ tosback_rules.each do |rule_file|
 end
 
 
-# go over the tosback2-style "services" files and fetch their configured pages
-tosback_services = Dir[File.join(CONFIG['tosback2-services'], '*.json')]
-tosback_services.each do |page_config_file|
+# go over the tosdr-style "services" files and fetch their configured pages
+tosdr_services = Dir[File.join(CONFIG['tosdr-services'], '*.json')]
+tosdr_services.each do |page_config_file|
   puts "\n==> #{page_config_file} <==" if $DEBUG
   page = JSON.load(File.open(page_config_file, 'r'))
   unless page.has_key?('tosback2')
