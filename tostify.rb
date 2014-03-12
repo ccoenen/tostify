@@ -58,9 +58,14 @@ def retrieve_request_body url, redirect_limit = 5
   puts "#{uri} (HTTP #{response.code}, #{response.body.length} Bytes)".yellow
 
   if response.code == "200"
-    if response["Content-Type"] =~ /charset=(.*)$/
+    if response["Content-Type"] =~ /charset=(.*)$/io
+      puts "  Guessed encoding from http-header: #{$1}" if $DEBUG
+      response.body.force_encoding($1)
+    elsif response.body =~ /<meta[^>]+charset\s*=([^>"]+)">/io
+      puts "  Guessed encoding from html meta-tag: #{$1}" if $DEBUG
       response.body.force_encoding($1)
     else
+      puts "  Defaulting to encoding utf-8" if $DEBUG
       response.body.force_encoding('UTF-8')
     end
 
