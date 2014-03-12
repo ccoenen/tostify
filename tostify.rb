@@ -46,6 +46,7 @@ CONFIG = JSON.load(File.open('config.json', 'r'))
 def retrieve_request_body url, redirect_limit = 5
   raise "Too many redirects" if redirect_limit < 1
   uri = URI(url)
+  uri.path = '/' if uri.path.empty?
 
   http = Net::HTTP.new(uri.host, uri.port)
   if uri.scheme == 'https'
@@ -173,6 +174,31 @@ end
 #
 # Actual Program starts here
 #
+
+
+tostify_rules = Dir[File.join(CONFIG['rules'], '*.json')]
+tostify_rules.each do |page_config_file|
+  puts "\n==> #{page_config_file} <==" if $DEBUG
+  rule = JSON.load(File.open(page_config_file, 'r'))
+
+  if rule.class == String
+    rule = {
+      'url' => rule,
+      'name' => File.basename(page_config_file, '.json')
+    }
+  end
+
+  options = {}
+  options[:xpath] = rule["xpath"] unless rule["xpath"].nil?
+  options[:css] = rule["css"] unless rule["css"].nil?
+
+  begin
+    download(rule['url'], rule['name'], options)
+  rescue StandardError => e
+    puts "  in #{page_config_file}".red
+    puts e.backtrace if $DEBUG
+  end
+end
 
 
 # go over tosback2-style "rules"
