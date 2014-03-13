@@ -27,7 +27,15 @@ If you're using the selector, we'll only convert that part of the page to text a
 
 Put this into your crontab to check all your configured sites every night:
 
-    0 5 * * * /path/to/tostify/tostify.rb
+    0 5 * * * cd /path/to/tostify; bundle exec ruby tostify.rb
+
+You can also run it manually, but you should use bundle exec to make sure that the patched hpricot is used. Run it like this:
+
+    bundle exec ruby tostify.rb
+
+or for even more debug output
+
+    bundle exec ruby -d tostify.rb
 
 
 Current State
